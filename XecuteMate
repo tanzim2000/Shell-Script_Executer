@@ -1,27 +1,50 @@
 #!/bin/bash
 
+################################################################################
+# Script Name: XecuteMate
+# Description: A script to find other shell scripts starting with "#!/bin/bash" 
+#              under the user's home directory, identify non-executable scripts,
+#              and make them executable.
+# Author     : Tanzim Ahmed Sagar
+# Date       : June 30, 2023
+################################################################################
+
+# Find all shell scripts starting with "#!/bin/bash"
 all_scripts=$(grep -rl --include=* --exclude-dir='.*' '#!/bin/bash' $HOME)
+
+# Check executable permission for each script
 non_executable_scripts=()
 for file in $all_scripts; do
     if [[ ! -x "$file" ]]; then
         non_executable_scripts+=("$file")
     fi
 done
+
+# Count the total number of scripts and non-executable scripts
 total_scripts=$(echo "$all_scripts" | wc -w)
 non_executable_count=${#non_executable_scripts[@]}
+
+# Display script information
 echo "Total shell scripts detected: $total_scripts"
 echo "Scripts without executable permission: $non_executable_count"
 echo "Non-executables:"
 for index in "${!non_executable_scripts[@]}"; do
     echo "[$index] $(basename "${non_executable_scripts[index]}")"
 done
+
+# Prompt the user to choose a script to make executable
 read -p "Choose an index to make the script executable: " chosen_index
 chosen_file="${non_executable_scripts[chosen_index]}"
+
+# Check if the chosen file exists
 if [[ -f "$chosen_file" ]]; then
+    # Display file details
     echo "File details:"
     echo "Name: $(basename "$chosen_file")"
     echo "Location: $(dirname "$chosen_file")"
     echo "Created: $(stat -c %y "$chosen_file")"
+
+    # Prompt for confirmation to make the file executable
     read -p "Confirm execution of this file? (Y/N): " confirmation
     if [[ "$confirmation" == [yY] ]]; then
         chmod +x "$chosen_file"
@@ -30,5 +53,6 @@ if [[ -f "$chosen_file" ]]; then
         echo "Confirmation declined!"
     fi
 else
-    echo "Invalid index or file does not exist." >&2
+    # Display error message for an invalid file selection
+    echo >&2 -e "Invalid index or file does not exist."
 fi
