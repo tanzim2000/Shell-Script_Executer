@@ -1,31 +1,22 @@
 #!/bin/bash
 
-all_files=$(grep -rl --include=* --exclude-dir='.*' '#!/bin/bash' $HOME)
-all_shell_scripts=()
-for file in $all_files; do
-    dir=$(dirname "$file")
-    if [[ $dir != .* ]]; then
-        all_shell_scripts+=("$file")
+all_scripts=$(grep -rl --include=* --exclude-dir='.*' '#!/bin/bash' $HOME)
+non_executable_scripts=()
+for file in $all_scripts; do
+    if [[ ! -x "$file" ]]; then
+        non_executable_scripts+=("$file")
     fi
 done
-non_executable_files=()
-for script in "${all_shell_scripts[@]}"; do
-    if [[ ! -x "$script" ]]; then
-        non_executable_files+=("$script")
-    fi
-done
-total_files=$(echo "$all_files" | wc -w)
-total_scripts=${#all_shell_scripts[@]}
-non_executable_count=${#non_executable_files[@]}
-echo "Total files checked: $total_files"
+total_scripts=$(echo "$all_scripts" | wc -w)
+non_executable_count=${#non_executable_scripts[@]}
 echo "Total shell scripts detected: $total_scripts"
 echo "Scripts without executable permission: $non_executable_count"
 echo "Non-executables:"
-for index in "${!non_executable_files[@]}"; do
-    echo "[$index] $(basename "${non_executable_files[index]}")"
+for index in "${!non_executable_scripts[@]}"; do
+    echo "[$index] $(basename "${non_executable_scripts[index]}")"
 done
 read -p "Choose an index to make the script executable: " chosen_index
-chosen_file="${non_executable_files[chosen_index]}"
+chosen_file="${non_executable_scripts[chosen_index]}"
 if [[ -f "$chosen_file" ]]; then
     echo "File details:"
     echo "Name: $(basename "$chosen_file")"
@@ -36,8 +27,8 @@ if [[ -f "$chosen_file" ]]; then
         chmod +x "$chosen_file"
         echo "File is now executable."
     else
-        echo "File execution was not confirmed."
+        echo "Confirmation declined!"
     fi
 else
-    echo "Invalid index or file does not exist."
+    echo "Invalid index or file does not exist." >&2
 fi
