@@ -1,0 +1,43 @@
+#!/bin/bash
+
+all_files=$(grep -rl --include=* --exclude-dir='.*' '#!/bin/bash' $HOME)
+all_shell_scripts=()
+for file in $all_files; do
+    dir=$(dirname "$file")
+    if [[ $dir != .* ]]; then
+        all_shell_scripts+=("$file")
+    fi
+done
+non_executable_files=()
+for script in "${all_shell_scripts[@]}"; do
+    if [[ ! -x "$script" ]]; then
+        non_executable_files+=("$script")
+    fi
+done
+total_files=$(echo "$all_files" | wc -w)
+total_scripts=${#all_shell_scripts[@]}
+non_executable_count=${#non_executable_files[@]}
+echo "Total files checked: $total_files"
+echo "Total shell scripts detected: $total_scripts"
+echo "Scripts without executable permission: $non_executable_count"
+echo "Non-executables:"
+for index in "${!non_executable_files[@]}"; do
+    echo "[$index] $(basename "${non_executable_files[index]}")"
+done
+read -p "Choose an index to make the script executable: " chosen_index
+chosen_file="${non_executable_files[chosen_index]}"
+if [[ -f "$chosen_file" ]]; then
+    echo "File details:"
+    echo "Name: $(basename "$chosen_file")"
+    echo "Location: $(dirname "$chosen_file")"
+    echo "Created: $(stat -c %y "$chosen_file")"
+    read -p "Confirm execution of this file? (Y/N): " confirmation
+    if [[ "$confirmation" == [yY] ]]; then
+        chmod +x "$chosen_file"
+        echo "File is now executable."
+    else
+        echo "File execution was not confirmed."
+    fi
+else
+    echo "Invalid index or file does not exist."
+fi
